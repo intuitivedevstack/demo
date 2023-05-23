@@ -10,21 +10,20 @@ import routerAuth from "./routes/userRoutes.js";
 import globalErrorHandling from "./controllers/errorController.js";
 import multer from "multer";
 import student from "./models/studentModel.js";
-import path from "path";
 
-import { fileURLToPath } from "url";
+// import path from "path";
+// import { fileURLToPath } from "url";
 
-const __filename = fileURLToPath(import.meta.url);
+// const __filename = fileURLToPath(import.meta.url);
+// const __dirname = path.dirname(__filename);
 
-const __dirname = path.dirname(__filename);
+// let tempraryImageDirectory;
 
-let tempraryImageDirectory;
-
-if (process.env.NODE_ENV && process.env.NODE_ENV == "production") {
-  tempraryImageDirectory = path.join(__dirname, `../../tmp/`);
-} else {
-  tempraryImageDirectory = "/tmp/";
-}
+// if (process.env.NODE_ENV && process.env.NODE_ENV == "production") {
+//   tempraryImageDirectory = path.join(__dirname, `../../tmp/`);
+// } else {
+//   tempraryImageDirectory = "/tmp/";
+// }
 
 const DBConnectionString = process.env.DB_CONNECTION_STRING;
 
@@ -64,7 +63,7 @@ app.get("/cool/working", (req, res) => {
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, path.join(__dirname, tempraryImageDirectory));
+    cb(null, "uploads/");
   },
   filename: function (req, file, cb) {
     cb(null, Date.now() + "-" + file.originalname);
@@ -86,11 +85,7 @@ app.post("/api/uploadphoto", upload.single("photo"), async (req, res) => {
     const findData = data.students.find((ele) => ele.id == studentId);
 
     const imageUrl =
-      req.protocol +
-      "://" +
-      req.get("host") +
-      tempraryImageDirectory +
-      req.file.filename;
+      req.protocol + "://" + req.get("host") + "/uploads/" + req.file.filename;
 
     findData.photo = {
       name: req.file.originalname,
@@ -120,7 +115,7 @@ app.post("/api/uploadphoto", upload.single("photo"), async (req, res) => {
 
 app.use("/api", router);
 app.use("/auth", routerAuth);
-app.use(express.static(__dirname));
+app.use("/uploads", express.static("uploads"));
 app.use(globalErrorHandling);
 
 const PORT = process.env.PORT || 8080;
