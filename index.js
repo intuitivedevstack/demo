@@ -10,7 +10,13 @@ import routerAuth from "./routes/userRoutes.js";
 import globalErrorHandling from "./controllers/errorController.js";
 import multer from "multer";
 import student from "./models/studentModel.js";
-import fs from "fs";
+import path from "path";
+
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+
+const __dirname = path.dirname(__filename);
 
 const DBConnectionString = process.env.DB_CONNECTION_STRING;
 
@@ -50,7 +56,7 @@ app.get("/cool/working", (req, res) => {
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "uploads/");
+    cb(null, path.join(__dirname, "/uploads/"));
   },
   filename: function (req, file, cb) {
     cb(null, Date.now() + "-" + file.originalname);
@@ -102,7 +108,7 @@ app.post("/api/uploadphoto", upload.single("photo"), async (req, res) => {
 
 app.use("/api", router);
 app.use("/auth", routerAuth);
-app.use("/uploads", express.static("uploads"));
+app.use(express.static(__dirname));
 app.use(globalErrorHandling);
 
 const PORT = process.env.PORT || 8080;
