@@ -11,20 +11,6 @@ import globalErrorHandling from "./controllers/errorController.js";
 import multer from "multer";
 import student from "./models/studentModel.js";
 
-// import path from "path";
-// import { fileURLToPath } from "url";
-
-// const __filename = fileURLToPath(import.meta.url);
-// const __dirname = path.dirname(__filename);
-
-// let tempraryImageDirectory;
-
-// if (process.env.NODE_ENV && process.env.NODE_ENV == "production") {
-//   tempraryImageDirectory = path.join(__dirname, `../../tmp/`);
-// } else {
-//   tempraryImageDirectory = "/tmp/";
-// }
-
 const DBConnectionString = process.env.DB_CONNECTION_STRING;
 
 mongoose
