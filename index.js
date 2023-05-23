@@ -18,6 +18,14 @@ const __filename = fileURLToPath(import.meta.url);
 
 const __dirname = path.dirname(__filename);
 
+let tempraryImageDirectory;
+
+if (process.env.NODE_ENV && process.env.NODE_ENV == "production") {
+  tempraryImageDirectory = path.join(__dirname, `../../tmp/`);
+} else {
+  tempraryImageDirectory = "/tmp/";
+}
+
 const DBConnectionString = process.env.DB_CONNECTION_STRING;
 
 mongoose
@@ -56,7 +64,7 @@ app.get("/cool/working", (req, res) => {
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, path.join(__dirname, "/uploads/"));
+    cb(null, path.join(__dirname, tempraryImageDirectory));
   },
   filename: function (req, file, cb) {
     cb(null, Date.now() + "-" + file.originalname);
@@ -78,7 +86,11 @@ app.post("/api/uploadphoto", upload.single("photo"), async (req, res) => {
     const findData = data.students.find((ele) => ele.id == studentId);
 
     const imageUrl =
-      req.protocol + "://" + req.get("host") + "/uploads/" + req.file.filename;
+      req.protocol +
+      "://" +
+      req.get("host") +
+      tempraryImageDirectory +
+      req.file.filename;
 
     findData.photo = {
       name: req.file.originalname,
