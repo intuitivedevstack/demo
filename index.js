@@ -21,7 +21,7 @@ const __dirname = path.dirname(__filename);
 let tempraryImageDirectory;
 
 if (process.env.NODE_ENV && process.env.NODE_ENV == "production") {
-  tempraryImageDirectory = path.join(__dirname, `/tmp/`);
+  tempraryImageDirectory = path.join(__dirname, `../../tmp/`);
 } else {
   tempraryImageDirectory = "/tmp/";
 }
