@@ -74,11 +74,7 @@ app.post("/api/uploadphoto", upload.single("photo"), async (req, res) => {
       req.protocol + "://" + req.get("host") + "/uploads/" + req.file.filename;
 
     findData.photo = {
-      name: req.file.originalname,
-      contentType: req.file.mimetype,
-      data: req.file.buffer,
       url: imageUrl,
-      path: req.file.path,
     };
 
     await student.updateOne(
