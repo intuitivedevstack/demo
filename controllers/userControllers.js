@@ -2,7 +2,6 @@ import User from "../models/userModel.js";
 import catchErrorAsync from "../utils/catchErrorAsync.js";
 import nodemailer from "nodemailer";
 import ApiErrorModel from "../utils/apiErrorModel.js";
-import jwt from "jsonwebtoken";
 
 const signUp = catchErrorAsync(async (req, res, next) => {
   const {
