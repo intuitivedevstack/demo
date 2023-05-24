@@ -50,7 +50,7 @@ app.get("/cool/working", (req, res) => {
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "uploads/");
+    cb(null, "tmp/");
   },
   filename: function (req, file, cb) {
     cb(null, Date.now() + "-" + file.originalname);
@@ -72,7 +72,7 @@ app.post("/api/uploadphoto", upload.single("photo"), async (req, res) => {
     const findData = data.students.find((ele) => ele.id == studentId);
 
     const imageUrl =
-      req.protocol + "://" + req.get("host") + "/uploads/" + req.file.filename;
+      req.protocol + "://" + req.get("host") + "/tmp/" + req.file.filename;
 
     findData.photo = {
       url: imageUrl,
@@ -98,9 +98,9 @@ app.post("/api/uploadphoto", upload.single("photo"), async (req, res) => {
 
 app.use("/api", router);
 app.use("/auth", routerAuth);
-// app.use("/uploads", express.static("uploads"));
+// app.use("/tmp", express.static("tmp"));
 const __dirname = path.resolve();
-app.use("/uploads", express.static(path.join(__dirname, "/uploads")));
+app.use("/tmp", express.static(path.join(__dirname, "/tmp")));
 app.use(globalErrorHandling);
 
 const PORT = process.env.PORT || 8080;
