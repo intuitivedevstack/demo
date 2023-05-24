@@ -98,7 +98,7 @@ app.post("/api/uploadphoto", upload.single("photo"), async (req, res) => {
 
 app.use("/api", router);
 app.use("/auth", routerAuth);
-// app.use("/tmp", express.static("tmp"));
+// app.use("/uploads", express.static("uploads"));
 const __dirname = path.resolve();
 app.use("/tmp", express.static(path.join(__dirname, "/tmp")));
 app.use(globalErrorHandling);
