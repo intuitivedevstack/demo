@@ -10,6 +10,7 @@ import routerAuth from "./routes/userRoutes.js";
 import globalErrorHandling from "./controllers/errorController.js";
 import multer from "multer";
 import student from "./models/studentModel.js";
+import path from "path";
 
 const DBConnectionString = process.env.DB_CONNECTION_STRING;
 
@@ -97,7 +98,9 @@ app.post("/api/uploadphoto", upload.single("photo"), async (req, res) => {
 
 app.use("/api", router);
 app.use("/auth", routerAuth);
-app.use("/uploads", express.static("uploads"));
+// app.use("/uploads", express.static("uploads"));
+const __dirname = path.resolve();
+app.use("/uploads", express.static(path.join(__dirname, "/uploads")));
 app.use(globalErrorHandling);
 
 const PORT = process.env.PORT || 8080;
