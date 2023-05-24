@@ -11,6 +11,7 @@ import globalErrorHandling from "./controllers/errorController.js";
 import multer from "multer";
 import student from "./models/studentModel.js";
 import path from "path";
+import fs from "fs";
 
 const DBConnectionString = process.env.DB_CONNECTION_STRING;
 
@@ -71,11 +72,8 @@ app.post("/api/uploadphoto", upload.single("photo"), async (req, res) => {
 
     const findData = data.students.find((ele) => ele.id == studentId);
 
-    const imageUrl =
-      req.protocol + "://" + req.get("host") + "/tmp/" + req.file.filename;
-
     findData.photo = {
-      url: imageUrl,
+      data: fs.readFileSync(path.join(__dirname + "/tmp/" + req.file.filename)),
     };
 
     await student.updateOne(
