@@ -4,12 +4,19 @@ import express from "express";
 import mongoose from "mongoose";
 import morgan from "morgan";
 import cors from "cors";
+import path from "path";
 
 import router from "./routes/studentRoutes.js";
 import routerAuth from "./routes/userRoutes.js";
 import globalErrorHandling from "./controllers/errorController.js";
 import multer from "multer";
 import student from "./models/studentModel.js";
+
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+
+const __dirname = path.dirname(__filename);
 
 const DBConnectionString = process.env.DB_CONNECTION_STRING;
 
@@ -97,7 +104,8 @@ app.post("/api/uploadphoto", upload.single("photo"), async (req, res) => {
 
 app.use("/api", router);
 app.use("/auth", routerAuth);
-app.use("/uploads", express.static("uploads"));
+// app.use("/uploads", express.static("uploads"));
+app.use(express.static(path.join(__dirname, "./uploads")));
 app.use(globalErrorHandling);
 
 const PORT = process.env.PORT || 8080;
