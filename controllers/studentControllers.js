@@ -151,6 +151,39 @@ const postfee = async (req, res) => {
   }
 };
 
+const postmsg = async (req, res) => {
+  const { userid } = req.query;
+  try {
+    const data = await student.findOne({ userid });
+
+    if (req.body.classVal === "All") {
+      data.students.map((ele) => {
+        ele.msg = req.body.msg;
+      });
+    } else {
+      data.students.map((ele) => {
+        if (ele.class === req.body.classVal) {
+          ele.msg = req.body.msg;
+        }
+      });
+    }
+
+    await student.updateOne(
+      { userid: userid },
+      { $set: { userid: userid, students: [...data.students] } }
+    );
+
+    res.json({
+      status: "Successfully Sent Message !",
+    });
+  } catch (err) {
+    res.json({
+      status: "error",
+      message: err.message,
+    });
+  }
+};
+
 const deletestudentById = async (req, res) => {
   console.log(req.query, "fired");
   const { studentId, userid } = req.query;
@@ -215,4 +248,5 @@ export {
   postfee,
   deletestudentById,
   deletefeeById,
+  postmsg,
 };
