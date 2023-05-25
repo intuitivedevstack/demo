@@ -8,7 +8,6 @@ import {
   postfee,
   deletestudentById,
   deletefeeById,
-  postmsg,
 } from "../controllers/studentControllers.js";
 
 const router = express.Router();
@@ -20,6 +19,5 @@ router.route("/getstudentsById").get(getstudentById);
 router.route("/postfee").post(postfee);
 router.route("/deletestudentById").delete(deletestudentById);
 router.route("/deletefeeById").delete(deletefeeById);
-router.route("/postmsg").post(postmsg);
 
 export default router;

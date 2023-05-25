@@ -10,8 +10,6 @@ import routerAuth from "./routes/userRoutes.js";
 import globalErrorHandling from "./controllers/errorController.js";
 import multer from "multer";
 import student from "./models/studentModel.js";
-import path from "path";
-import fs from "fs";
 
 const DBConnectionString = process.env.DB_CONNECTION_STRING;
 
@@ -49,15 +47,7 @@ app.get("/cool/working", (req, res) => {
   res.send("cool working !");
 });
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "tmp/");
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + "-" + file.originalname);
-  },
-});
-
+const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 app.post("/api/uploadphoto", upload.single("photo"), async (req, res) => {
@@ -73,7 +63,7 @@ app.post("/api/uploadphoto", upload.single("photo"), async (req, res) => {
     const findData = data.students.find((ele) => ele.id == studentId);
 
     findData.photo = {
-      data: fs.readFileSync(path.join(__dirname + "/tmp/" + req.file.filename)),
+      data: req.file.buffer,
     };
 
     await student.updateOne(
@@ -94,11 +84,82 @@ app.post("/api/uploadphoto", upload.single("photo"), async (req, res) => {
   }
 });
 
+app.post("/api/postmsg", async (req, res) => {
+  const { userid } = req.query;
+  console.log(req.body);
+
+  try {
+    const data = await student.findOne({ userid });
+
+    if (req.body.classVal === "All") {
+      data.students.map((ele) => {
+        ele.msg = req.body.msg;
+      });
+    } else {
+      data.students.map((ele) => {
+        if (ele.class === req.body.classVal) {
+          ele.msg = req.body.msg;
+        }
+      });
+    }
+
+    await student.updateOne(
+      { userid: userid },
+      { $set: { userid: userid, students: [...data.students] } }
+    );
+
+    res.json({
+      status: "Successfully Sent Message !",
+    });
+  } catch (err) {
+    res.json({
+      status: "error",
+      message: err.message,
+    });
+  }
+});
+
+app.post("/api/postpdf", upload.single("pdf"), async (req, res) => {
+  const { userid } = req.query;
+
+  let classVal = JSON.parse(req.body.classVal);
+
+  try {
+    const data = await student.findOne({ userid });
+
+    if (classVal == "All") {
+      data.students.map((ele) => {
+        ele.pdf = {
+          data: req.file.buffer,
+          fileName: req.file.originalname,
+        };
+      });
+    } else {
+      data.students.map((ele) => {
+        if (ele.class == classVal) {
+          ele.pdf = req.file.buffer;
+        }
+      });
+    }
+
+    await student.updateOne(
+      { userid: userid },
+      { $set: { userid: userid, students: [...data.students] } }
+    );
+
+    res.json({
+      status: "Successfully Sent Message !",
+    });
+  } catch (err) {
+    res.json({
+      status: "error",
+      message: err.message,
+    });
+  }
+});
+
 app.use("/api", router);
 app.use("/auth", routerAuth);
-// app.use("/uploads", express.static("uploads"));
-const __dirname = path.resolve();
-app.use("/tmp", express.static(path.join(__dirname, "/tmp")));
 app.use(globalErrorHandling);
 
 const PORT = process.env.PORT || 8080;
