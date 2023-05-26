@@ -1,10 +1,5 @@
 import student from "../models/studentModel.js";
 import { v4 as uuidv4 } from "uuid";
-import path from "path";
-import fs from "fs";
-import multer from "multer";
-
-const __dirname = path.resolve();
 
 const insertstudent = async (req, res) => {
   const { userid, studentdetails } = req.body;
