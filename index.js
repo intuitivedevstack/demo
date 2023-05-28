@@ -10,6 +10,7 @@ import routerAuth from "./routes/userRoutes.js";
 import globalErrorHandling from "./controllers/errorController.js";
 import multer from "multer";
 import student from "./models/studentModel.js";
+import file from "./models/fileModel.js";
 
 const DBConnectionString = process.env.DB_CONNECTION_STRING;
 
@@ -51,29 +52,40 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 app.post("/api/uploadphoto", upload.single("photo"), async (req, res) => {
-  console.log("fire");
-  console.log(req.file);
   if (!req.file) {
     return res.status(400).send("No file uploaded.");
   }
-  const { studentId, userid } = req.query;
+  const { studentId } = req.query;
   try {
-    const data = await student.findOne({ userid });
-
-    const findData = data.students.find((ele) => ele.id == studentId);
-
-    findData.photo = {
-      data: req.file.buffer,
-    };
-
-    await student.updateOne(
-      { userid: userid },
-      { $set: { userid: userid, students: [...data.students] } }
+    const base64String = btoa(
+      String.fromCharCode(...new Uint8Array(req.file.buffer))
     );
+
+    const data = await file.findOne({ studentid: studentId });
+
+    if (data) {
+      await file.updateOne(
+        { studentid: studentId },
+        {
+          studentid: studentId,
+          photo: {
+            data: base64String,
+            fileName: req.file.originalname,
+          },
+        }
+      );
+    } else {
+      await file.create({
+        studentid: studentId,
+        photo: {
+          data: base64String,
+          fileName: req.file.originalname,
+        },
+      });
+    }
 
     res.json({
       status: "success",
-      findData,
     });
   } catch (err) {
     console.log(err);
@@ -85,28 +97,32 @@ app.post("/api/uploadphoto", upload.single("photo"), async (req, res) => {
 });
 
 app.post("/api/postmsg", async (req, res) => {
-  const { userid } = req.query;
-  console.log(req.body);
-
   try {
-    const data = await student.findOne({ userid });
-
+    let data;
     if (req.body.classVal === "All") {
-      data.students.map((ele) => {
-        ele.msg = req.body.msg;
-      });
+      data = await student.find();
     } else {
-      data.students.map((ele) => {
-        if (ele.class === req.body.classVal) {
-          ele.msg = req.body.msg;
-        }
-      });
+      data = await student.find({ cls: req.body.classVal });
     }
 
-    await student.updateOne(
-      { userid: userid },
-      { $set: { userid: userid, students: [...data.students] } }
-    );
+    data.map(async (ele) => {
+      const isdata = await file.findOne({ studentid: ele._id });
+
+      if (isdata) {
+        await file.updateOne(
+          { studentid: ele._id },
+          {
+            studentid: ele._id,
+            msg: req.body.msg,
+          }
+        );
+      } else {
+        await file.create({
+          studentid: ele._id,
+          msg: req.body.msg,
+        });
+      }
+    });
 
     res.json({
       status: "Successfully Sent Message !",
@@ -120,35 +136,73 @@ app.post("/api/postmsg", async (req, res) => {
 });
 
 app.post("/api/postpdf", upload.single("pdf"), async (req, res) => {
-  const { userid } = req.query;
-
   let classVal = JSON.parse(req.body.classVal);
 
-  try {
-    const data = await student.findOne({ userid });
+  const base64String = btoa(
+    Array.from(new Uint8Array(req.file.buffer))
+      .map((b) => String.fromCharCode(b))
+      .join("")
+  );
 
-    if (classVal == "All") {
-      data.students.map((ele) => {
-        ele.pdf = {
-          data: req.file.buffer,
-          fileName: req.file.originalname,
-        };
-      });
+  try {
+    let data;
+    if (classVal === "All") {
+      data = await student.find();
     } else {
-      data.students.map((ele) => {
-        if (ele.class == classVal) {
-          ele.pdf = req.file.buffer;
-        }
-      });
+      data = await student.find({ cls: classVal });
     }
 
-    await student.updateOne(
-      { userid: userid },
-      { $set: { userid: userid, students: [...data.students] } }
-    );
+    data.map(async (ele) => {
+      const isdata = await file.findOne({ studentid: ele._id });
+
+      if (isdata) {
+        await file.updateOne(
+          { studentid: ele._id },
+          {
+            pdf: {
+              data: base64String,
+              fileName: req.file.originalname,
+            },
+          }
+        );
+      } else {
+        await file.create({
+          studentid: ele._id,
+          pdf: {
+            data: base64String,
+            fileName: req.file.originalname,
+          },
+        });
+      }
+    });
 
     res.json({
-      status: "Successfully Sent Message !",
+      status: "Successfully Uploaded !",
+    });
+  } catch (err) {
+    res.json({
+      status: "error",
+      message: err.message,
+    });
+  }
+});
+
+app.get("/api/getfile", async (req, res) => {
+  const { studentId } = req.query;
+
+  try {
+    let data;
+
+    if (studentId) {
+      data = await file.findOne({ studentid: studentId });
+    } else {
+      data = await file.find();
+    }
+
+    res.json({
+      status: "Success !",
+      length: data.length,
+      data,
     });
   } catch (err) {
     res.json({

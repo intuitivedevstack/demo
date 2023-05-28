@@ -1,48 +1,39 @@
 import student from "../models/studentModel.js";
-import { v4 as uuidv4 } from "uuid";
+import fee from "../models/feeModel.js";
 
 const insertstudent = async (req, res) => {
-  const { userid, studentdetails } = req.body;
+  const {
+    studentName,
+    parentName,
+    parentNumber,
+    studentNumber,
+    cls,
+    rollNumber,
+    address,
+  } = req.body;
 
-  studentdetails.fees = [];
-  studentdetails.id = uuidv4();
+  const studentItem = new student({
+    studentName,
+    parentName,
+    parentNumber,
+    studentNumber,
+    cls,
+    rollNumber,
+    address,
+  });
 
-  const existingUser = await student.findOne({ userid });
-
-  console.log(existingUser);
-
-  if (existingUser) {
-    let allStudents = [...existingUser.students, studentdetails];
-    await student.updateOne(
-      { userid: existingUser.userid },
-      { $set: { userid: existingUser.userid, students: allStudents } }
-    );
-
-    res.json({
-      status: "success",
-      message: "successfully added",
-    });
-  } else {
-    let students = [];
-    students.push(studentdetails);
-    const studentItem = new student({
-      userid,
-      students,
-    });
-
-    studentItem
-      .save()
-      .then((data) => {
-        console.log(data);
-        res.status(201).json({
-          status: "success",
-          message: "successfully added",
-        });
-      })
-      .catch((err) => {
-        console.log(err, "Error");
+  studentItem
+    .save()
+    .then((data) => {
+      console.log(data);
+      res.status(201).json({
+        status: "success",
+        message: "successfully added",
       });
-  }
+    })
+    .catch((err) => {
+      console.log(err, "Error");
+    });
 };
 
 const getstudents = async (req, res) => {
@@ -63,14 +54,14 @@ const getstudents = async (req, res) => {
 };
 
 const getstudentsByUserId = async (req, res) => {
-  let { userid, limit, page } = req.query;
+  let { limit, page } = req.query;
   limit = Number(limit);
   page = Number(page);
 
   try {
-    const data = await student.findOne({ userid });
+    const data = await student.find();
 
-    const resultantData = data.students.slice((page - 1) * limit, page * limit);
+    const resultantData = data.slice((page - 1) * limit, page * limit);
 
     function compare(a, b) {
       if (a.studentName < b.studentName) {
@@ -87,9 +78,9 @@ const getstudentsByUserId = async (req, res) => {
     res.json({
       status: "success",
       length: resultantData.length,
-      total: data.students.length,
+      total: data.length,
       resultantData,
-      data: data.students,
+      data: data,
     });
   } catch (err) {
     res.json({
@@ -102,12 +93,11 @@ const getstudentsByUserId = async (req, res) => {
 // Find by id
 
 const getstudentById = async (req, res) => {
-  console.log(req.query, "fired");
-  const { studentId, userid } = req.query;
+  const { studentId } = req.query;
   try {
-    const data = await student.findOne({ userid });
+    const data = await student.findOne({ _id: studentId });
 
-    const findData = data.students.find((ele) => ele.id == studentId);
+    const findData = data;
 
     res.json({
       status: "success",
@@ -123,24 +113,35 @@ const getstudentById = async (req, res) => {
 };
 
 const postfee = async (req, res) => {
-  console.log(req.query, "fired");
-  const { studentId, userid } = req.query;
+  const { studentId } = req.query;
+
+  req.body.studentid = studentId;
+
+  await fee.create(req.body);
+
   try {
-    const data = await student.findOne({ userid });
-
-    const findData = data.students.find((ele) => ele.id == studentId);
-
-    req.body.id = uuidv4();
-    findData.fees = [req.body, ...findData.fees];
-
-    await student.updateOne(
-      { userid: userid },
-      { $set: { userid: userid, students: [...data.students] } }
-    );
-
     res.json({
       status: "success",
-      findData,
+    });
+  } catch (err) {
+    console.log(err);
+    res.json({
+      status: "error",
+      message: err.message,
+    });
+  }
+};
+
+const getfee = async (req, res) => {
+  let { studentId } = req.query;
+
+  const data = await fee.find({ studentid: studentId });
+
+  try {
+    res.json({
+      status: "success",
+      length: data.length,
+      data: data,
     });
   } catch (err) {
     console.log(err);
@@ -152,17 +153,9 @@ const postfee = async (req, res) => {
 };
 
 const deletestudentById = async (req, res) => {
-  console.log(req.query, "fired");
-  const { studentId, userid } = req.query;
+  const { studentId } = req.query;
   try {
-    const data = await student.findOne({ userid });
-
-    let filtered = data.students.filter((ele) => ele.id != studentId);
-
-    await student.updateOne(
-      { userid: userid },
-      { $set: { userid: userid, students: [...filtered] } }
-    );
+    await student.deleteOne({ _id: studentId });
 
     res.json({
       status: "success",
@@ -178,21 +171,9 @@ const deletestudentById = async (req, res) => {
 };
 
 const deletefeeById = async (req, res) => {
-  console.log(req.query, "fired");
-  const { feeid, studentId, userid } = req.query;
+  const { feeid } = req.query;
   try {
-    const data = await student.findOne({ userid });
-
-    let findData = data.students.find((ele) => ele.id == studentId);
-
-    const filteredFees = findData.fees.filter((ele) => ele.id != feeid);
-
-    findData.fees = filteredFees;
-
-    await student.updateOne(
-      { userid: userid },
-      { $set: { userid: userid, students: [...data.students] } }
-    );
+    await fee.deleteOne({ _id: feeid });
 
     res.json({
       status: "success",
@@ -215,4 +196,5 @@ export {
   postfee,
   deletestudentById,
   deletefeeById,
+  getfee,
 };
