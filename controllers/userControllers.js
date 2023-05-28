@@ -72,7 +72,7 @@ const resetPassword = async (req, res) => {
       subject: "Password Reset Request",
       html: `
       <p>Please click the link below to reset your password:</p>
-      <a href="https://fs-git-rcc-ajayjhadev.vercel.app/resetpassword/${token}">Reset Password</a>
+      <a href="https://fs-six.vercel.app/resetpassword/${token}">Reset Password</a>
     `,
     };
 
